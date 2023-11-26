@@ -1,0 +1,207 @@
+#+TITLE: hass
+
+~hass-dash~ is an extension to [[https://github.com/purplg/hass][hass]] to enable creating dashboards for you Home Assistant entities within Emacs.
+
+* Contents
+:PROPERTIES:
+:TOC:      :include all :force ((nothing)) :ignore (this) :local (nothing)
+:END:
+:CONTENTS:
+- [[#installation][Installation]]
+  - [[#use-package][use-package]]
+  - [[#straightel][straight.el]]
+  - [[#doom-emacs][Doom Emacs]]
+- [[#configuration][Configuration]]
+  - [[#elisp-example][Elisp example]]
+  - [[#layout-file-example][Layout file example]]
+  - [[#structure][Structure]]
+  - [[#widgets][Widgets]]
+    - [[#state][State]]
+    - [[#button][Button]]
+    - [[#toggle][Toggle]]
+- [[#usage][Usage]]
+- [[#license][License]]
+:END:
+
+[[file:images/screenshot1.png]]
+
+* Installation
+This package is available on [[https://melpa.org/][MELPA]].
+
+** use-package
+
+#+BEGIN_SRC emacs-lisp :results none
+(use-package hass
+  :ensure t
+  :init
+  ;; -- Configuration goes here --
+  )
+#+END_SRC
+
+** straight.el
+
+#+BEGIN_SRC emacs-lisp :results none
+(straight-use-package 'hass)
+;; -- Configuration goes here --
+#+END_SRC
+
+** Doom Emacs
+
+Place in your ~packages.el~ then run ~doom sync~ to pull the repository:
+
+#+BEGIN_SRC emacs-lisp :results none
+(package! hass)
+#+END_SRC
+
+Then load the package in your main config file.
+
+#+BEGIN_SRC emacs-lisp :results none
+(use-package! hass
+  :init
+  ;; -- Configuration goes here --
+  )
+#+END_SRC
+
+* Configuration
+
+The dependent [[https://github.com/purplg/hass][hass]] package must be configured first. If you can use ~hass-call-service~ to toggle some entity, you should be good to go.
+
+There are two ways to configure your dashboard. You can either declare it in Elisp by defining =hass-dash-layouts= or you can load a layout file with =hass-dash-load-layout=. The data file will get parsed and turn into Elisp automatically, so there's no difference in features either way.
+
+** Elisp example
+
+#+BEGIN_SRC emacs-lisp :results none
+(setq hass-dash-layouts
+  ;; Key for dashboard. Shows up with completing-read when calling
+  ;; `hass-dash-open'.
+  '((default
+     ;; Create a widget group to encompass the whole
+     ;; dashboard. Optional, but allows you to set a title,
+     ;; etc.
+     (hass-group
+      ;; Label the group "Home Assistant" at the top.
+      :title "Home Assistant"
+      ;; %t is where the title goes and %v is the widget it
+      ;; owns.
+      :format "%t\n\n%v"
+      ;; Create a subgroup of widgets.
+      (hass-group
+       ;; Label this subgroup "Kitchen"
+       :title "Kitchen"
+       ;; Give it a unique face to make it stand out.
+       :title-face outline-2
+       (hass-toggle "light.kitchen_lights")
+       (hass-toggle "light.master_bedroom_lights")
+       (hass-toggle "switch.entry_light"
+                    ;; Override the widgets friendly name
+                    :label "Hallway"
+                    ;; Require a y/n confirmation when
+                    ;; toggling this entity.
+                    :confirm t))
+      (hass-group
+       :title "Group 2"
+       :format "\n%t\n%v"
+       (hass-toggle "light.master_bedroom_fan_light"))))
+  
+    (simple
+     ;; Declaring a top-level hass-group is optional. It's only needed
+     ;; if you want to give the group a title or other properties.
+     ((hass-toggle "light.kitchen_lights")
+      (hass-toggle "switch.entry_lights")))))
+#+END_SRC
+
+** Layout file example
+This snippet is equivalent to the code above once loaded with =hass-dash-load-layout=.
+
+#+BEGIN_SRC emacs-lisp :results none
+default
+
+;; Create a widget group to encompass the whole dashboard. Optional,
+;; but allows you to set a title, etc.
+(hass-group
+ ;; Label the group "Home Assistant" at the top.
+ :title "Home Assistant"
+ ;; %t is where the title goes and %v is the widget it owns.
+ :format "%t\n%v"
+ ;; Create a subgroup of widgets.
+ (hass-group
+  ;; Label this subgroup "Kitchen"
+  :title "Kitchen"
+  ;; Give it a unique face to make it stand out.
+  :title-face outline-2
+  (hass-toggle "light.kitchen_lights")
+  (hass-toggle "light.master_bedroom_lights")
+  (hass-toggle "switch.entry_light"
+               ;; Override the widgets friendly name
+               :label "Hallway"
+               ;; Require a y/n confirmation when toggling this
+               ;; entity.
+               :confirm t))
+ (hass-group
+  :title "Group 2"
+  :format "\n%t\n\n%v"
+  (hass-toggle "light.master_bedroom_fan_light")))
+
+simple
+
+;; Declaring a top-level hass-group is optional. It's only needed if
+;; you want to give the group a title or other properties.
+(hass-toggle "light.kitchen_lights")
+(hass-toggle "switch.entry_lights")
+#+END_SRC
+
+** Structure
+To use the dashboard feature, ~hass-dash-layouts~ must be configured to tell ~hass-dash~ what the layout should look like. The layout is constructed with three components: *groups*, *widgets*, and *properties*.
+
+- Each element in ~hass-dash-layouts~ is a *dashboard*.
+- A dashboard is a cons of its key/id and the widgets it contains.
+- A *widget* is an Emacs widget, probably one from this package.
+
+Any widgets defined in ~hass-dash-layouts~ are automatically inserted into the ~hass-tracked-entities~ list in order to receive state updates.
+
+** Widgets
+
+All widgets contain at least the following properties:
+
+| Widget Property     | Description                                                                                  |
+|---------------------+----------------------------------------------------------------------------------------------|
+| ~:label~            | The human readable label of the widget to be shown on the dashboard.                         |
+| ~:service~          | The service to be called when the widget is selected.                                        |
+| ~:icon~             | The icon to be shown prefixed to the widget.                                                 |
+| ~:confirm~          | When ~t~ or a string, ask for confirmation before calling the service.                     |
+
+*** State
+A 'state' widget is a read-only widget to simply display the state of some entity. I typically like to use this as the very first widget in a group to show the overall status of the group. For example, a vacuum:
+
+#+BEGIN_SRC emacs-lisp
+(hass-group :title "Vacuum"
+  (hass-state "vacuum.valetudo_vacuum" :format "%v\n")
+  ; Vacuum related widgets
+  ; ...
+  )
+#+END_SRC
+
+*** Button
+A 'button' widget is a push-button widget to call a service.
+
+#+BEGIN_SRC emacs-lisp
+(hass-button "vacuum.valetudo_vacuum"
+  :service "vacuum.start"
+  :format "%[%t: %v%]\n"
+  :label "Clean")
+#+END_SRC
+
+*** Toggle
+A 'toggle' widget is similar to a button, except it'll only show on or off. If the state is anything other than "on", then it will show "off".
+
+#+BEGIN_SRC emacs-lisp
+(hass-toggle "light.kitchen")
+#+END_SRC
+
+* Usage
+
+After configuring the ~hass-dash-layouts~, use the function ~hass-dash-open~ to select and pop open a dashboard.
+
+* License
+
+MIT
