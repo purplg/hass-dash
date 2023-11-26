@@ -4,6 +4,8 @@
 
 ~hass-dash~ is an extension to [[https://github.com/purplg/hass][hass]] to enable creating dashboards for you Home Assistant entities within Emacs.
 
+[[https://github.com/purplg/hass-dash/blob/screenshots/screenshot1.png]]
+
 * Contents
 :PROPERTIES:
 :TOC:      :include all :force ((nothing)) :ignore (this) :local (nothing)
