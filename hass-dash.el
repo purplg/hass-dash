@@ -674,6 +674,10 @@ just -1 or 1 to affect slider move direction."
   (interactive)
   (hass-dash--slider-adjust (* -1 (or step 1))))
 
+(defun hass-dash-shutdown ()
+  (interactive)
+  (hass-websocket--disconnect))
+
 ;;;###autoload
 (defun hass-dash-load-layout (path)
   "Load dashboards from file at PATH.
