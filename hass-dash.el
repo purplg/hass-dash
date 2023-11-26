@@ -747,12 +747,11 @@ The example below creates two dashboards named `my-lights' and
   :syntax-table nil
   :abbrev-table nil
   :interactive t
-  ;; Refresh dashboard when entity state is updated
-  (unless hass-mode (hass-mode 1))
+  (unless hass-websocket--connection (hass-websocket--connect))
   (setq-local hass-dash--widgets nil)
   (setq-local hass-dash--rendering nil)
+  ;; Refresh dashboard when entity state is updated
   (add-hook 'hass-entity-updated-functions #'hass-dash--update-entity))
 
 (provide 'hass-dash)
-
 ;;; hass-dash.el ends here
