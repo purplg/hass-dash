@@ -76,46 +76,83 @@
 ;; You can set `hass-dash-layouts' directly like in the following example:
 
 ;;   (setq hass-dash-layouts
-;;         `((default . ((hass-dash-group :title "Home Assistant"
-;;                                        :format "%t\n\n%v"
-;;                                        (hass-dash-group :title "Kitchen"
-;;                                                         :title-face outline-2
-;;                                                         (hass-dash-toggle :entity-id "light.kitchen_lights")
-;;                                                         (hass-dash-toggle :entity-id "light.master_bedroom_lights")
-;;                                                         (hass-dash-toggle :entity-id "switch.entry_light"
-;;                                                                           :label "Hallway"
-;;                                                                           :confirm t)))
-;;                       (hass-dash-group :title "Group 2"
-;;                                        :format "\n\n%t\n\n%v"
-;;                                        (hass-dash-toggle :entity-id "light.master_bedroom_fan_light"))))
+;;     ;; Key for dashboard. Shows up with completing-read when calling
+;;     ;; `hass-dash-open'.
+;;     '((default
+;;        ;; Create a widget group to encompass the whole
+;;        ;; dashboard. Optional, but allows you to set a title,
+;;        ;; etc.
+;;        (hass-group
+;;         ;; Label the group "Home Assistant" at the top.
+;;         :title "Home Assistant"
+;;         ;; %t is where the title goes and %v is the widget it
+;;         ;; owns.
+;;         :format "%t\n\n%v"
+;;         ;; Create a subgroup of widgets.
+;;         (hass-group
+;;          ;; Label this subgroup "Kitchen"
+;;          :title "Kitchen"
+;;          ;; Give it a unique face to make it stand out.
+;;          :title-face outline-2
+;;          (hass-toggle "light.kitchen_lights")
+;;          (hass-toggle "light.master_bedroom_lights")
+;;          (hass-toggle "switch.entry_light"
+;;                       ;; Override the widgets friendly name
+;;                       :label "Hallway"
+;;                       ;; Require a y/n confirmation when
+;;                       ;; toggling this entity.
+;;                       :confirm t))
+;;         (hass-group
+;;          :title "Group 2"
+;;          :format "\n%t\n%v"
+;;          (hass-toggle "light.master_bedroom_fan_light"))))
 ;;
-;;           (simple . ((hass-dash-toggle :entity-id "light.kitchen_lights")
-;;                      (hass-dash-toggle :entity-id "switch.entry_lights")))))
+;;       (simple
+;;        ;; Declaring a top-level hass-group is optional. It's only needed
+;;        ;; if you want to give the group a title or other properties.
+;;        ((hass-toggle "light.kitchen_lights")
+;;         (hass-toggle "switch.entry_lights")))))
 
 ;;;; Layout file example
 
-;; Or for more complex layouts you can create a layout file and load with
-;; `hass-dash-load-layout'.  The following defines the same layout as above.
+;; Or you can create a layout file and load it with
+;; `hass-dash-load-layout'.  The following defines the same layout as
+;; above.
 
 ;;   default
 ;;
-;;   (hass-dash-group :title "Home Assistant"
-;;                    :format "%t\n\n%v"
-;;                    (hass-dash-group :title "Kitchen"
-;;                                     :title-face outline-2
-;;                                     (hass-dash-toggle :entity-id "light.kitchen_lights")
-;;                                     (hass-dash-toggle :entity-id "light.master_bedroom_lights")
-;;                                     (hass-dash-toggle :entity-id "switch.entry_light"
-;;                                                       :label "Hallway"
-;;                                                       :confirm t)))
-;;   (hass-dash-group :title "Group 2"
-;;                    :format "\n\n%t\n\n%v"
-;;                    (hass-dash-toggle :entity-id "light.master_bedroom_fan_light"))
-;;
-;;   simple
-;;
-;;   (hass-dash-toggle :entity-id "light.kitchen_lights")
-;;   (hass-dash-toggle :entity-id "switch.entry_lights")
+;;   ;; Create a widget group to encompass the whole dashboard. Optional,
+;;   ;; but allows you to set a title, etc.
+;;   (hass-group
+;;    ;; Label the group "Home Assistant" at the top.
+;;    :title "Home Assistant"
+;;    ;; %t is where the title goes and %v is the widget it owns.
+;;    :format "%t\n%v"
+;;    ;; Create a subgroup of widgets.
+;;    (hass-group
+;;     ;; Label this subgroup "Kitchen"
+;;     :title "Kitchen"
+;;     ;; Give it a unique face to make it stand out.
+;;     :title-face outline-2
+;;     (hass-toggle "light.kitchen_lights")
+;;     (hass-toggle "light.master_bedroom_lights")
+;;     (hass-toggle "switch.entry_light"
+;;                  ;; Override the widgets friendly name
+;;                  :label "Hallway"
+;;                  ;; Require a y/n confirmation when toggling this
+;;                  ;; entity.
+;;                  :confirm t))
+;;    (hass-group
+;;     :title "Group 2"
+;;     :format "\n%t\n\n%v"
+;;     (hass-toggle "light.master_bedroom_fan_light")))
+
+;; simple
+
+;; ;; Declaring a top-level hass-group is optional. It's only needed if
+;; ;; you want to give the group a title or other properties.
+;; (hass-toggle "light.kitchen_lights")
+;; (hass-toggle "switch.entry_lights")
 
 ;;; Usage
 
