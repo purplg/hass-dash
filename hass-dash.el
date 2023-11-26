@@ -127,9 +127,10 @@
 ;;; Code:
 (require 'subr-x)
 (require 'wid-edit)
+(require 'json)
+(require 'websocket)
 
 (require 'hass)
-(require 'hass-websocket)
 
 (defvar-local hass-dash--widgets '()
   "An alist of entity-id's and points where associated widgets are
@@ -240,6 +241,103 @@ Full example:
     (simple .
      ((hass-toggle \"light.kitchen_lights\")
       (hass-toggle \"switch.entry_lights\")))))")
+
+
+;;;; Websocket
+(defvar hass-dash-websocket--connection '()
+  "Websocket connection info.")
+
+(defvar hass-dash-websocket--interactions nil
+  "Number Websocket interactions to use for message IDs.")
+
+;; Updates - Received from Home Assistant over websocket
+(defvar hass-dash-websocket-connected-hook #'hass-dash-websocket--subscribe-to-state-changes
+  "Hook called after successful authentication to websocket.")
+
+(defun hass-dash-websocket--handle-message (_websocket frame)
+  "Route FRAME received from websocket."
+  (let* ((content (hass--deserialize (websocket-frame-text frame)))
+         (type (cdr (assoc 'type content))))
+
+    (pcase type
+      ("auth_required"
+       (hass--debug "AUTH" "Authenticating...")
+       (hass-dash-websocket--send
+        `((type . "auth")
+          (access_token . ,(hass--apikey)))))
+
+      ("auth_ok"
+       (hass--message "Connected to Home Assistant")
+       (run-hooks 'hass-dash-websocket-connected-hook))
+
+      ("auth_invalid"
+       (hass--warning "Failed to authenticate with Home Assistant: %s" (cdr (assoc 'message content))))
+
+      ("event"
+       (hass--debug "EVENT" "%s" (cdr (assoc 'event content)))
+       (hass-dash-websocket--handle-event (cdr (assoc 'event content)))))))
+
+(defun hass-dash-websocket--handle-event (event)
+  "Handle a websocket message.
+EVENT is the name of the event in Home Assistant that triggered."
+  (let ((event-type (cdr (assoc 'event_type event)))
+        (data (cdr (assoc 'data event))))
+    (pcase event-type
+      ("state_changed"
+       (hass-dash-websocket--handle-state-change data)))))
+
+(defun hass-dash-websocket--handle-state-change (data)
+  "Handle a websocket message for the \='state_changed' event.
+This event is only handled when the `entity-id' of this event is
+in the `hass-tracked-entities' list.  Otherwise, this event is
+ignored.
+
+DATA is the data retrieved from an event that triggered in Home
+Assistant."
+  (let ((entity-id (cdr (assoc 'entity_id data))))
+    (when (member entity-id hass-tracked-entities)
+      (let ((data (cdr (assoc 'new_state data))))
+        (hass--query-entity-result
+         entity-id
+         (cdr (assoc 'state data))
+         (cdr (assoc 'attributes data)))))))
+
+;; Requests - Send to Home Assistant over websocket
+(defun hass-dash-websocket--subscribe-to-state-changes ()
+  "Request 'state_changed' events be sent over the websocket connection."
+  (hass-dash-websocket--subscribe "state_changed"))
+
+(defun hass-dash-websocket--subscribe (event-type)
+  "Wrapper function to subscribe to an event.
+EVENT-TYPE is a string of event name to subscribe to"
+  (hass-dash-websocket--send `((id . ,hass-dash-websocket--interactions)
+                          (type . "subscribe_events")
+                          (event_type . ,event-type))))
+
+(defun hass-dash-websocket--send (message)
+  "Send a message to the websocket.
+MESSAGE is an alist to be encoded into a JSON object."
+  (websocket-send-text hass-dash-websocket--connection (hass--serialize message))
+  (setq hass-dash-websocket--interactions (1+ hass-dash-websocket--interactions)))
+
+(defun hass-dash-websocket--connect ()
+  "Establish a websocket connection to Home Assistant."
+  (hass-dash-websocket--disconnect)
+  (setq hass-dash-websocket--connection
+        (websocket-open (format "%s://%s:%s/api/websocket"
+                                (if hass-insecure "ws" "wss")
+                                hass-host
+                                hass-port)
+                        :on-message #'hass-dash-websocket--handle-message
+                        :on-open (lambda (_websocket) (setq hass-dash-websocket--interactions 0))
+                        :on-close (lambda (_websocket) (setq hass-dash-websocket--connection nil)))))
+
+(defun hass-dash-websocket--disconnect ()
+  "Disconnect the websocket connection to Home Assistant."
+  (when hass-dash-websocket--connection
+    (websocket-close hass-dash-websocket--connection)
+    (setq hass-dash-websocket--connection nil)
+    (hass--debug "WEBSOCKET" "Disconnected from websocket")))
 
 
 ;;;; Dashboard rendering
@@ -676,7 +774,7 @@ just -1 or 1 to affect slider move direction."
 
 (defun hass-dash-shutdown ()
   (interactive)
-  (hass-websocket--disconnect))
+  (hass-dash-websocket--disconnect))
 
 ;;;###autoload
 (defun hass-dash-load-layout (path)
@@ -751,7 +849,7 @@ The example below creates two dashboards named `my-lights' and
   :syntax-table nil
   :abbrev-table nil
   :interactive t
-  (unless hass-websocket--connection (hass-websocket--connect))
+  (unless hass-dash-websocket--connection (hass-dash-websocket--connect))
   (setq-local hass-dash--widgets nil)
   (setq-local hass-dash--rendering nil)
   ;; Refresh dashboard when entity state is updated
