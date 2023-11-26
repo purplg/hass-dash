@@ -1,5 +1,7 @@
 #+TITLE: hass-dash
 
+⚠️ This package is currently in development and unstable. ⚠️
+
 ~hass-dash~ is an extension to [[https://github.com/purplg/hass][hass]] to enable creating dashboards for you Home Assistant entities within Emacs.
 
 * Contents
