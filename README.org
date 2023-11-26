@@ -7,10 +7,6 @@
 :TOC:      :include all :force ((nothing)) :ignore (this) :local (nothing)
 :END:
 :CONTENTS:
-- [[#installation][Installation]]
-  - [[#use-package][use-package]]
-  - [[#straightel][straight.el]]
-  - [[#doom-emacs][Doom Emacs]]
 - [[#configuration][Configuration]]
   - [[#elisp-example][Elisp example]]
   - [[#layout-file-example][Layout file example]]
@@ -22,45 +18,6 @@
 - [[#usage][Usage]]
 - [[#license][License]]
 :END:
-
-[[file:images/screenshot1.png]]
-
-* Installation
-This package is available on [[https://melpa.org/][MELPA]].
-
-** use-package
-
-#+BEGIN_SRC emacs-lisp :results none
-(use-package hass
-  :ensure t
-  :init
-  ;; -- Configuration goes here --
-  )
-#+END_SRC
-
-** straight.el
-
-#+BEGIN_SRC emacs-lisp :results none
-(straight-use-package 'hass)
-;; -- Configuration goes here --
-#+END_SRC
-
-** Doom Emacs
-
-Place in your ~packages.el~ then run ~doom sync~ to pull the repository:
-
-#+BEGIN_SRC emacs-lisp :results none
-(package! hass)
-#+END_SRC
-
-Then load the package in your main config file.
-
-#+BEGIN_SRC emacs-lisp :results none
-(use-package! hass
-  :init
-  ;; -- Configuration goes here --
-  )
-#+END_SRC
 
 * Configuration
 
