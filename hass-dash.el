@@ -518,9 +518,6 @@ The following optional properties can be used:
   :format "%[%t: %v%]\n"
   :value-get #'hass-dash--value-state)
 
-(define-widget 'hass-dash-state 'hass-state
-  "Replaced with `hass-state'.")
-
 ;;;;; Button widget
 (define-widget 'hass-button 'push-button
   "A button widget for home-assistant dashboards.
@@ -542,9 +539,6 @@ The following optional properties can also be used:
   :value-get #'hass-dash--value-state
   :value-create #'widget-item-value-create
   :action #'hass-dash--action)
-
-(define-widget 'hass-dash-button 'hass-button
-  "Replaced with `hass-button'.")
 
 ;;;;; Slider widget
 (define-widget 'hass-slider 'item
@@ -747,9 +741,6 @@ Assistant.  The following optional properties can also be used:
   :value-get #'hass-dash--toggle-widget-value-get
   :action #'hass-dash--action)
 
-(define-widget 'hass-dash-toggle 'hass-toggle
-  "Replaced with `hass-toggle'.")
-
 (defun hass-dash--toggle-widget-value-get (widget)
   "Set the state for a toggle WIDGET."
   (hass-switch-p (widget-get widget :entity-id)))
@@ -763,9 +754,6 @@ the font face for the title."
   :format "%t\n%v"
   :value-create #'hass-dash--group-value-create
   :title-face 'hass-dash-group)
-
-(define-widget 'hass-dash-group 'hass-group
-  "Replaced with `hass-group'.")
 
 (defun hass-dash--group-convert (widget)
   "Create the hass dashboard group WIDGET.
