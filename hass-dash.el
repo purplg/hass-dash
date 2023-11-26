@@ -244,7 +244,7 @@ Full example:
 
 
 ;;;; Websocket
-(defvar hass-dash-websocket--connection '()
+(defvar hass-dash-websocket--connection nil
   "Websocket connection info.")
 
 (defvar hass-dash-websocket--interactions nil
