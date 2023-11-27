@@ -179,6 +179,9 @@ This is used to populate `hass-dash--widgets'. When we are
 actively rendering, then we'll add the widget to the list on
 creation.")
 
+(defvar hass-dash--layout-path nil
+  "The path to the last layout file that was loaded.")
+
 
 ;;;; Customizable
 (defvar hass-dash-mode-map
@@ -801,6 +804,13 @@ just -1 or 1 to affect slider move direction."
   (interactive)
   (hass-dash-websocket--disconnect))
 
+(defun hass-dash-reload-layout ()
+  "Reload the currently loaded dashboards from disk."
+  (interactive)
+  (if hass-dash--layout-path
+      (hass-dash-load-layout hass-dash--layout-path)
+    (hass--message "No layout file has been loaded.")))
+
 ;;;###autoload
 (defun hass-dash-load-layout (path)
   "Load dashboards from file at PATH.
@@ -847,7 +857,8 @@ The example below creates two dashboards named `my-lights' and
               (while (consp (car data))
                 (push (pop data) layout))
               (push (nreverse layout) result))
-            result))))
+            result)))
+  (setq hass-dash--layout-path path))
 
 ;;;###autoload
 (defun hass-dash-open (dashboard)
