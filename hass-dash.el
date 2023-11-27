@@ -498,7 +498,7 @@ service.  It can take on the following values:
 (defun hass-dash--value-state (widget)
   (when-let ((entity-id (widget-get widget :entity-id))
              (value-source (widget-get widget :value-source)))
-    (cond ((consp value-source) (hass-attribute-of entity-id (cdr value-source)))
+    (cond ((consp value-source) (hass-attribute-of entity-id (cdr value-source) 0))
           ((eq 'state value-source) (hass-state-of entity-id))
           (t (hass--warning "Invalid :value-source.") "ERR"))))
 
